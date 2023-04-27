@@ -6,6 +6,21 @@ voltage=k1*distance**(k2)
 """
 import numpy as np
 import matplotlib.pyplot as plt
+
+def generate_random(length):
+    import random
+
+    index = list(np.arange(0,length,1))
+    x = random.sample(y, int(length/2))
+    x.sort()
+    y = []
+
+    for i in index:
+        if i in x:
+            continue
+        y.append(i)
+    
+    return x, y
  
 # data for estimation
 distances = np.arange(10, 41, 1)
@@ -15,12 +30,13 @@ plt.xlabel('distance [cm]')
 plt.ylabel('voltage [V]')
 plt.savefig('general_shape.png')
 
-distances_trimed=distances[::2]
-raw_measurements_total_trimed=raw_measurements_total[::2]
+sample1, sample2 = generate_random(len(distances))
+distances_trimed=distances[sample1]
+raw_measurements_total_trimed=raw_measurements_total[sample1]
  
 # validation data 
-distances2=distances[1::2]
-raw_measurements2=raw_measurements_total[1::2]
+distances2=distances[sample2]
+raw_measurements2=raw_measurements_total[sample2]
  
 print(distances_trimed)
 print(distances2)
