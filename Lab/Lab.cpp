@@ -109,13 +109,8 @@ int main(void){
 		int t=0;
 		double sensorVolt=sumVal*5/1024;
 
-		double v1 = 1.36;
-		double d1 = 20;
-		double v2 = 0.93;
-		double d2 = 30;
-
-		double k2 = -log10(v1/v2)/log10(d2/d1);
-		double k1 = v2/pow(d2, k2);
+		double k1 = 20.72084301;
+		double k2 = -0.91152188;		
 
 		t = pow(sensorVolt/k1, 1/k2);
 		
