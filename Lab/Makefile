@@ -2,7 +2,7 @@
 MAIN_APP = Lab
 FOLDER_NAME = Lab
 #Main hex file path in windows format
-MAIN_HEX_PATH = /Users/ben/Desktop/avr/$(FOLDER_NAME)/$(MAIN_APP).hex
+MAIN_HEX_PATH = /Users/ben/Desktop/AVR-code-Microcontrollers-Mechatronics/$(FOLDER_NAME)/$(MAIN_APP).hex
 
 # Compiler and other Section
 CC = /Applications/Arduino.app/Contents/Java/hardware/tools/avr/bin/avr-gcc
