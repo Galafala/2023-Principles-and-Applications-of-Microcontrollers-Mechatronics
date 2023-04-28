@@ -58,23 +58,23 @@ for _ in range(times):
     k1+=np.exp(c[0])
     k2+=c[1]
     
-    # test on the estimation data
-    # raw_measurements_total_trimed_prediction=np.zeros(shape=(n,1))
-    # for i in range(n):
-    #     raw_measurements_total_trimed_prediction[i]=k1*distances_trimed[i]**(k2)
-    
-    # plt.plot(distances_trimed,raw_measurements_total_trimed_prediction,'xr',label='least-squares prediction')
-    # plt.plot(distances_trimed,raw_measurements_total_trimed,'k',label='real data')
-    # plt.xlabel('distance [cm]')
-    # plt.ylabel('voltage [V]')
-    # plt.legend()
-    # plt.savefig('estimation_curve.png')
-    
-    # test on the validation data 
-    # n1=distances2.shape[0]
-    # raw_measurements2_prediction=np.zeros(shape=(n1,1))
-    # for i in range(n1):
-    #     raw_measurements2_prediction[i]=k1*distances2[i]**(k2)
+# test on the estimation data
+# raw_measurements_total_trimed_prediction=np.zeros(shape=(n,1))
+# for i in range(n):
+#     raw_measurements_total_trimed_prediction[i]=k1*distances_trimed[i]**(k2)
+
+# plt.plot(distances_trimed,raw_measurements_total_trimed_prediction,'xr',label='least-squares prediction')
+# plt.plot(distances_trimed,raw_measurements_total_trimed,'k',label='real data')
+# plt.xlabel('distance [cm]')
+# plt.ylabel('voltage [V]')
+# plt.legend()
+# plt.savefig('estimation_curve.png')
+
+# test on the validation data 
+# n1=distances2.shape[0]
+# raw_measurements2_prediction=np.zeros(shape=(n1,1))
+# for i in range(n1):
+#     raw_measurements2_prediction[i]=k1*distances2[i]**(k2)
 
 k1 /= times
 k2 /= times
