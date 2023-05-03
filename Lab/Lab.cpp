@@ -73,8 +73,22 @@ void USART_putstring(char* StringPtr) {
 	}
 }
 
-int main(void)
-{
+void PIDcontrol(float *sv1, float *sv2, float *sv3, float *Kp, float *Ki, float *Kd, float *offset, float *Tp, float *integral, float *lastError, float *derivative) {
+	float error = *sv2-*offset;
+
+	*integral += error;
+	*derivative = error-*lastError;
+	
+	float turn = *Kp*error + *Ki**integral + *Kd**derivative;
+	turn /= 100;
+
+	OCR0B = *Tp+turn; // PD5 lN2 MOTOR1正轉
+	OCR2B = *Tp-turn; // PD3 lN4 MOTOR2正轉
+
+	*lastError = error;
+}
+
+int main(void) {
 	CLKPR=(1<<CLKPCE);
 	CLKPR=0b00000011; // set clk to 1Mhz
 	DDRD=0xFF; // PORTD as output
@@ -93,14 +107,19 @@ int main(void)
 	UCSR0C |= (1<<UCSZ01)|(1<<UCSZ00);
 	UCSR0B |= (1<<TXEN0);
 	
+	float Kp = 1000;
+	float Ki = 100;
+	float Kd = 10000;
+	float offset = 45;
+	float Tp = 50;
+	float integral = 0;
+	float lastError = 0;
+	float derivative = 0;
 
-	while(1)
-	{		
-		/*
-		CLKPR=0b10000000;
-		CLKPR=0b00000000;
-		*/
-		
+	while(1) {			
+		// CLKPR=0b10000000;
+		// CLKPR=0b00000000;
+				
 		ADCSRA |= (1<<ADEN);
 		float sv1 = 0;
 		float sv2 = 0;
@@ -109,13 +128,14 @@ int main(void)
 			sv1 += (float)ADC0Read(0);
 			sv2 += (float)ADC1Read(1);
 			sv3 += (float)ADC2Read(2);
-		}
+		} // read data from sensors
 		
-		// sv1 /= 10; //mean of 10 readings
-		// sv2 /= 10;
-		// sv3 /= 10;
+		sv1 /= 10; // mean of 10 readings
+		sv2 /= 10;
+		sv3 /= 10;
 
-		
+		PIDcontrol(&sv1, &sv2, &sv3, &Kp, &Ki, &Kd, &offset, &Tp, &integral, &lastError, &derivative);
+
 		char Buffer[40];
 		
 		char *intStr = itoa((int)sv3, Buffer, 10);
@@ -131,20 +151,20 @@ int main(void)
 		// char *intStr = itoa((int)sv3, Buffer, 10);
 		// strcat(intStr, "\n");
 		// USART_putstring(intStr);
-		// _delay_ms(500);
-		
+		// _delay_ms(500);		
 
-		if (sv3>300 && sv1<300) {
-			turnright();
-			_delay_ms(5);
-		}
-		else if (sv1>300 && sv3<300) {
-			turnleft();
-			_delay_ms(5);
-		}
-		else {
-			straight();
-		}
+		// if (sv3>300 && sv1<300) {
+		// 	turnright();
+		// 	_delay_ms(5);
+		// }
+		// else if (sv1>300 && sv3<300) {
+		// 	turnleft();
+		// 	_delay_ms(5);
+		// }
+		// else {
+		// 	straight();
+		// }
 	}
-	
+
+	return 0;
 }
