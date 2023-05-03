@@ -22,35 +22,8 @@ def generate_random(length):
     return x, y
  
 # data for estimation
-distances = np.array([10, 11, 12, 13, 14, 20, 25, 30 ,35, 40])
-raw_measurements_total = np.array([2.313281298
-,2.198046923
-,2.053417921
-,1.893701077
-,1.655859375
-
-
-
-
-
-,1.437988281
-
-
-
-
-,1.237011671
-
-
-
-
-,1.103222609
-
-
-
-
-,1.044921875
-,1.009521484])
-
+distances = np.arange(10, 41, 1)
+raw_measurements_total = np.array([2.55, 2.28, 2.16, 2, 1.87, 1.76, 1.63, 1.53, 1.48, 1.42, 1.36, 1.26, 1.22, 1.19, 1.15, 1.11, 1.07, 1.05, 1, 0.97, 0.93, 0.92, 0.9, 0.88, 0.84, 0.8, 0.78, 0.77, 0.74, 0.73, 0.72])
 plt.plot(distances, raw_measurements_total)
 plt.xlabel('distance [cm]')
 plt.ylabel('voltage [V]')

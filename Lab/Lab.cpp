@@ -8,72 +8,37 @@
 #include <stdlib.h>
 #include <string.h>
 
-uint16_t ADCRead(const int);
-void USART_putstring(char* StringPtr);
+#include <avr/io.h>
 
-const double k1 = 20.72084301;
-const double k2 = -0.91152188;		
-
-void Display1(int a);
-void Display2(int b);
-
-int main(void){
-	CLKPR=0b10000000;
-	CLKPR=0b00000000;
-	DDRC = 0;
-	ADCSRA |= (1<<ADEN);
-	unsigned int BaudR = 19200;
-	unsigned int ubrr = (F_CPU / (BaudR*16UL))-1;
-	UBRR0H = (unsigned char)(ubrr>>8);
-	UBRR0L = (unsigned char)ubrr;
-	UCSR0C |= (1<<UCSZ01)|(1<<UCSZ00);
-	UCSR0B |= (1<<TXEN0);
-	
-	DDRD=0xFF;
-	DDRB=0xFF;
-	PORTB = 0xFF;
-	PORTD = 0xFF;
-	
-	
-	while(1){
-		double sumVal = 0;
-		char Buffer[8];
-
-		for(int i = 0; i < 100; i++) {
-			sumVal += (double)ADCRead(0);
-		}
-			
-		sumVal /= 100; //mean of 10 readings		
-		
-		int a,b;
-		int t=0;
-		double sensorVolt=sumVal*5/1024;
-
-		t = pow(sensorVolt/k1, 1/k2);
-		
-		if(t<10)
-		{a=0;b=t;}
-		else {
-			a=t/10;
-
-			if((t*10)%10>4){
-				b = t%10 +1;
-			}
-			else {
-				b=t%10;
-			}
-		}
-		Display1(a);
-		Display2(b);
-		
-		char *intStr = itoa((int)sumVal, Buffer, 10);
-		strcat(intStr, "\n");
-		USART_putstring(intStr);
-		_delay_ms(500);		
-	}
+void stop() {
+	OCR0A=0; // PD6 lN1 MOTOR1反轉right
+	OCR0B=0; // PD5 lN2 MOTOR1正轉
+	OCR2A=0;//PB3 lN3 MOTOR2反轉left
+	OCR2B=0;//PD3 lN4 MOTOR2正轉
 }
 
-uint16_t ADCRead(const int channel) {
+void turnleft() {	
+	OCR0A=0; // PD6 lN1 MOTOR1反轉right
+	OCR0B=80; // PD5 lN2 MOTOR1正轉
+	OCR2A=0;//PB3 lN3 MOTOR2反轉left
+	OCR2B=0;//PD3 lN4 MOTOR2正轉
+}
+
+void turnright() {
+	OCR0A=0; // PD6 lN1 MOTOR1反轉right
+	OCR0B=0; // PD5 lN2 MOTOR1正轉
+	OCR2A=0;//PB3 lN3 MOTOR2反轉left
+	OCR2B=85;//PD3 lN4 MOTOR2正轉
+}
+
+void straight() {
+	OCR0A=0; // PD6 lN1 MOTOR1反轉right
+	OCR0B=80; // PD5 lN2 MOTOR1正轉 (右輪)
+	OCR2A=0;//PB3 lN3 MOTOR2反轉left
+	OCR2B=85;//PD3 lN4 MOTOR2正轉 (左輪)
+}
+
+uint16_t ADC0Read(const int channel) {
 	ADMUX = 0b01000000;
 	ADMUX |= channel;
 	ADCSRA |= (1<<ADSC) | (1<<ADIF);
@@ -82,7 +47,25 @@ uint16_t ADCRead(const int channel) {
 	return ADC;
 }
 
-void USART_putstring(char* StringPtr){
+uint16_t ADC1Read(const int channel) {
+	ADMUX = 0b01000001;
+	ADMUX |= channel;
+	ADCSRA |= (1<<ADSC) | (1<<ADIF);
+	while ( (ADCSRA & (1<<ADIF)) == 0);
+	ADCSRA &= ~(1<<ADSC);
+	return ADC;
+}
+
+uint16_t ADC2Read(const int channel) {
+	ADMUX = 0b010000010;
+	ADMUX |= channel;
+	ADCSRA |= (1<<ADSC) | (1<<ADIF);
+	while ( (ADCSRA & (1<<ADIF)) == 0);
+	ADCSRA &= ~(1<<ADSC);
+	return ADC;
+}
+
+void USART_putstring(char* StringPtr) {
 	while(*StringPtr != 0x00){
 		while(!(UCSR0A & (1<<UDRE0)));
 		UDR0 = *StringPtr;
@@ -90,50 +73,78 @@ void USART_putstring(char* StringPtr){
 	}
 }
 
-void Display1(int a)
+int main(void)
 {
-	if(a==0)
-	{PORTD = 0b10000000;}
-	if(a==1)
-	{PORTD = 0b11110001;}
-	if(a==2)
-	{PORTD = 0b01001000;}
-	if(a==3)
-	{PORTD = 0b01100000;}
-	if(a==4)
-	{PORTD = 0b00110001;}
-	if(a==5)
-	{PORTD = 0b00100100;}
-	if(a==6)
-	{PORTD = 0b00000100;}
-	if(a==7)
-	{PORTD = 0b10110000;}
-	if(a==8)
-	{PORTD = 0b00000000;}
-	if(a==9)
-	{PORTD = 0b00100000;}
-}
+	CLKPR=(1<<CLKPCE);
+	CLKPR=0b00000011; // set clk to 1Mhz
+	DDRD=0xFF; // PORTD as output
+	DDRB=0xFF; // PORTB as output
+	
+    DDRC = 0;
+	TCCR0A=0b10100001; // phase correct PWM
+	TCCR0B=0b00000010; // timer prescaler
+	TCCR2A=0b10100001; // phase correct PWM
+	TCCR2B=0b00000010; // timer prescaler
+	
+	unsigned int BaudR = 9600;
+	unsigned int ubrr = (F_CPU / (BaudR*16UL))-1;
+	UBRR0H = (unsigned char)(ubrr>>8);
+	UBRR0L = (unsigned char)ubrr;
+	UCSR0C |= (1<<UCSZ01)|(1<<UCSZ00);
+	UCSR0B |= (1<<TXEN0);
+	
 
-void Display2(int b)
-{
-	if(b==0)
-	{PORTB = 0b01000000;}
-	if(b==1)
-	{PORTB = 0b01111001;}
-	if(b==2)
-	{PORTB = 0b00100100;}
-	if(b==3)
-	{PORTB = 0b00110000;}
-	if(b==4)
-	{PORTB = 0b00011001;}
-	if(b==5)
-	{PORTB = 0b00010010;}
-	if(b==6)
-	{PORTB = 0b00000010;}
-	if(b==7)
-	{PORTB = 0b01011000;}
-	if(b==8)
-	{PORTB = 0b00000000;}
-	if(b==9)
-	{PORTB = 0b00010000;}
+	while(1)
+	{		
+		/*
+		CLKPR=0b10000000;
+		CLKPR=0b00000000;
+		*/
+		
+		ADCSRA |= (1<<ADEN);
+		float sv1 = 0;
+		float sv2 = 0;
+		float sv3 = 0;
+		for(int i = 0; i < 10; i++)	{
+			sv1 += (float)ADC0Read(0);
+			sv2 += (float)ADC1Read(1);
+			sv3 += (float)ADC2Read(2);
+		}
+		
+		// sv1 /= 10; //mean of 10 readings
+		// sv2 /= 10;
+		// sv3 /= 10;
+
+		
+		char Buffer[40];
+		
+		char *intStr = itoa((int)sv3, Buffer, 10);
+		strcat(intStr, "\n");
+		USART_putstring(intStr);
+		_delay_ms(500);
+
+		// char *intStr = itoa((int)sv2, Buffer, 10);
+		// strcat(intStr, "\n");
+		// USART_putstring(intStr);
+		// _delay_ms(500);
+
+		// char *intStr = itoa((int)sv3, Buffer, 10);
+		// strcat(intStr, "\n");
+		// USART_putstring(intStr);
+		// _delay_ms(500);
+		
+
+		if (sv3>300 && sv1<300) {
+			turnright();
+			_delay_ms(5);
+		}
+		else if (sv1>300 && sv3<300) {
+			turnleft();
+			_delay_ms(5);
+		}
+		else {
+			straight();
+		}
+	}
+	
 }
