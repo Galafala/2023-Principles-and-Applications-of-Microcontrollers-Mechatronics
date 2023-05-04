@@ -21,14 +21,14 @@ void turnleft() {
 	OCR0A=0; // PD6 lN1 MOTOR1反轉right
 	OCR0B=80; // PD5 lN2 MOTOR1正轉
 	OCR2A=0;//PB3 lN3 MOTOR2反轉left
-	OCR2B=0;//PD3 lN4 MOTOR2正轉
+	OCR2B=20;//PD3 lN4 MOTOR2正轉
 }
 
 void turnright() {
 	OCR0A=0; // PD6 lN1 MOTOR1反轉right
-	OCR0B=0; // PD5 lN2 MOTOR1正轉
+	OCR0B=20; // PD5 lN2 MOTOR1正轉
 	OCR2A=0;//PB3 lN3 MOTOR2反轉left
-	OCR2B=85;//PD3 lN4 MOTOR2正轉
+	OCR2B=80;//PD3 lN4 MOTOR2正轉
 }
 
 void straight() {
@@ -133,15 +133,13 @@ int main(void) {
 		sv1 /= 10; // mean of 10 readings
 		sv2 /= 10;
 		sv3 /= 10;
-
-		PIDcontrol(&sv1, &sv2, &sv3, &Kp, &Ki, &Kd, &offset, &Tp, &integral, &lastError, &derivative);
-
-		char Buffer[40];
+		// PIDcontrol(&sv1, &sv2, &sv3, &Kp, &Ki, &Kd, &offset, &Tp, &integral, &lastError, &derivative);
+		// char Buffer[40];
 		
-		char *intStr = itoa((int)sv3, Buffer, 10);
-		strcat(intStr, "\n");
-		USART_putstring(intStr);
-		_delay_ms(500);
+		// char *intStr = itoa((int)sv3, Buffer, 10);
+		// strcat(intStr, "\n");
+		// USART_putstring(intStr);
+		// _delay_ms(500);
 
 		// char *intStr = itoa((int)sv2, Buffer, 10);
 		// strcat(intStr, "\n");
@@ -153,17 +151,19 @@ int main(void) {
 		// USART_putstring(intStr);
 		// _delay_ms(500);		
 
-		// if (sv3>300 && sv1<300) {
-		// 	turnright();
-		// 	_delay_ms(5);
-		// }
-		// else if (sv1>300 && sv3<300) {
-		// 	turnleft();
-		// 	_delay_ms(5);
-		// }
-		// else {
-		// 	straight();
-		// }
+		if(sv3>sv1) {
+			turnleft();
+			_delay_ms(20);
+			stop();
+			// _delay_ms(5);
+		}
+		else if (sv3<sv1) {
+			turnright();
+			_delay_ms(30);
+			stop();
+			// _delay_ms(5);
+		}
+		// e 
 	}
 
 	return 0;
