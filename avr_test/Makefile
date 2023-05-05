@@ -1,12 +1,12 @@
 #Main application file name
 MAIN_APP = avr_test
 #Main hex file path in windows format
-MAIN_HEX_PATH = /Users/ben/Desktop/avr_test/$(MAIN_APP).hex
+MAIN_HEX_PATH = /Users/weber/Documents/GitHub/AVR-code-Microcontrollers-Mechatronics/avr_test/$(MAIN_APP).hex
 
 # Compiler and other Section
-CC = /Applications/Arduino.app/Contents/Java/hardware/tools/avr/bin/avr-gcc
-OBJCOPY = /Applications/Arduino.app/Contents/Java/hardware/tools/avr/bin/avr-objcopy
-AVRDUDE := /Applications/Arduino.app/Contents/Java/hardware/tools/avr/bin/avrdude -C /Applications/Arduino.app/Contents/Java/hardware/tools/avr/etc/avrdude.conf
+CC = /usr/local/bin/avr-gcc
+OBJCOPY = /usr/local/bin/avr-objcopy
+AVRDUDE := /usr/local/bin/avrdude -C /usr/local/etc/avrdude.conf
 
 #Options for avr-gcc
 CFLAGS = -g -Os -o
@@ -24,7 +24,7 @@ DUDEFLAGS += avrisp
 DUDEFLAGS += -p
 DUDEFLAGS += m328p  
 DUDEFLAGS += -P 
-DUDEFLAGS += /dev/cu.usbmodem14101
+DUDEFLAGS += /dev/cu.usbmodem143101
 DUDEFLAGS += -b 
 DUDEFLAGS += 19200 
 DUDEFLAGS += -U flash:w:$(MAIN_HEX_PATH):i
