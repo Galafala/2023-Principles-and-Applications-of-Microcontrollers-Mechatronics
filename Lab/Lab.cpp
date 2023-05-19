@@ -8,16 +8,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <avr/io.h>
-
-void stop();
-
-void turnleft();
-
-void turnright();
-
-void straight();
-
 uint16_t ADC0Read(const int channel);
 
 uint16_t ADC1Read(const int channel);
@@ -28,24 +18,16 @@ void serialOutput();
 
 void USART_putstring(char* StringPtr);
 
-inline void PIDcontrol(bool LFSensor[], float *Kp, float *Ki, float *Kd, float *offset, float *Tp, float *integral, float *lastError, float *derivative) {
-	int error = 0;
-	if     ((LFSensor[0]==false)&&(LFSensor[1]==false)&&(LFSensor[2]==true))   error = -2; // 偏左
-	else if((LFSensor[0]==false)&&(LFSensor[1]==true) &&(LFSensor[2]==true))   error = -1; // 微偏左
-	else if((LFSensor[0]==false)&&(LFSensor[1]==true) &&(LFSensor[2]==false))  error = 0;  // 居中
-	else if((LFSensor[0]==true) &&(LFSensor[1]==true) &&(LFSensor[2]==false))  error = 1;  // 微偏右
-	else if((LFSensor[0]==true) &&(LFSensor[1]==false)&&(LFSensor[2]==false))  error = 2;  // 偏右
-	else if((LFSensor[0]==true) &&(LFSensor[1]==true) &&(LFSensor[2]==true))   error = 0;  // 全黑線
-
-	*integral += error;
-	*derivative = error-*lastError;
+void PIDcontrol(float *error, float* Kp, float* Ki, float* Kd, const float* Tp, float* integral, float* lastError, float* derivative) {
+	*integral += *error;
+	*derivative = *error-*lastError;
 	
-	float turn = *Kp*error + *Ki**integral + *Kd**derivative;
+	float turn = *Kp**error + *Ki**integral + *Kd**derivative;
 
-	OCR0B = *Tp+turn; // PD5 lN2 MOTOR1正轉 (right)
-	OCR2B = *Tp-turn-3; // PD3 lN4 MOTOR2正轉 (left)
-
-	*lastError = error;
+	OCR2B = *Tp+turn; // PD3 lN4 MOTOR2正轉 (right)
+	OCR0B = *Tp-turn; // PD5 lN2 MOTOR1正轉 (left)
+	
+	*lastError = *error;
 }
 
 int main(void) {
@@ -62,55 +44,55 @@ int main(void) {
 	
 	serialOutput();
 
-	float Kc = 4; // critical Kp
-	float Pc = 3.53;
+	float Kp = 0.4;
+	float Ki = 0.1;
+	float Kd = 0;
 
-	float Kp = Kc*0.6;
-	float Ki = 2*Kp/Pc;
-	float Kd = Kp*Pc/8;
-
-	Kp = 20;
-	Ki = 0;
-	Kd = 0;
-
-	float offset = 450;
-	float Tp = 50;
+	const float Tp = 155;
+	const float offset = 810;
 
 	float integral = 0;
 	float lastError = 0;
 	float derivative = 0;
 
 	while(1) {			
-		CLKPR=0b10000000; // set timer for serial output
-		CLKPR=0b00000000; // set timer for serial output
+		// CLKPR=0b10000000; // set timer for serial output
+		// CLKPR=0b00000000; // set timer for serial output
 				
 		ADCSRA |= (1<<ADEN);
-
-		bool LFSensor[3] = {0, 0, 0};
 
 		float sv0 = 0;
 		float sv1 = 0;
 		float sv2 = 0;
 
-		sv0 = (float)ADC0Read(0);
+		sv0 = (float)ADC0Read(2);
 		sv1 = (float)ADC1Read(1);
-		sv2 = (float)ADC2Read(2);
+		sv2 = (float)ADC2Read(0);
 
-		int threshold = 400;
-		if (sv0 > threshold) LFSensor[0] = true;
-		else LFSensor[0] = false;
-		if (sv1 > threshold) LFSensor[1] = true;
-		else LFSensor[1] = false;
-		if (sv2 > threshold) LFSensor[2] = true;
-		else LFSensor[2] = false;
+		float error = 30;
+		error += sv0;
+		error += sv1;
+		error += sv2;
 		
-		PIDcontrol(LFSensor, &Kp, &Ki, &Kd, &offset, &Tp, &integral, &lastError, &derivative);
+		error -= offset;
+		if (sv2 > sv0) { // 偏左
+			if (error > 0) error *= -1; 
+		}
+		else { // 偏右
+			if (error < 0) error *= -1; 
+		}
+		
+		PIDcontrol( &error, &Kp, &Ki, &Kd, &Tp, &integral, &lastError, &derivative);
 
-		char Buffer[8];
-		char *intStr = itoa((int)sv1, Buffer, 10);
-		strcat(intStr, "\n");
-		USART_putstring(intStr);
-		_delay_ms(500);
+		// float turn = Kp*error;
+
+
+		// char Buffer[8];
+		// char *intStr = itoa((float) error, Buffer, 10);
+		// strcat(intStr, "\n");
+		// USART_putstring(intStr);
+
+		// _delay_ms(500);
 	}
 
 	return 0;
