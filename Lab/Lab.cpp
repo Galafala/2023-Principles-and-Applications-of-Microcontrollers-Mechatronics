@@ -12,23 +12,9 @@ uint16_t ADC0Read(const int channel);
 
 uint16_t ADC1Read(const int channel);
 
-uint16_t ADC2Read(const int channel);
-
 void serialOutput();
 
 void USART_putstring(char* StringPtr);
-
-void PIDcontrol(float *error, float* Kp, float* Ki, float* Kd, const float* Tp, float* integral, float* lastError, float* derivative) {
-	*integral += *error;
-	*derivative = *error-*lastError;
-	
-	float turn = *Kp**error + *Ki**integral + *Kd**derivative;
-
-	OCR2B = *Tp+turn; // PD3 lN4 MOTOR2正轉 (right)
-	OCR0B = *Tp-turn; // PD5 lN2 MOTOR1正轉 (left)
-	
-	*lastError = *error;
-}
 
 int main(void) {
 	CLKPR=(1<<CLKPCE);
@@ -44,62 +30,38 @@ int main(void) {
 	
 	serialOutput();
 
-	float Kp = 0.4;
-	float Ki = 0.1;
-	float Kd = 0;
 
-	const float Tp = 155;
-	const float offset = 810;
-
-	float integral = 0;
-	float lastError = 0;
-	float derivative = 0;
-
-	while(1) {			
-		// CLKPR=0b10000000; // set timer for serial output
-		// CLKPR=0b00000000; // set timer for serial output
-				
+	while(1) {				
 		ADCSRA |= (1<<ADEN);
 
 		float sv0 = 0;
 		float sv1 = 0;
-		float sv2 = 0;
 
-		sv0 = (float)ADC0Read(2);
-		sv1 = (float)ADC1Read(1);
-		sv2 = (float)ADC2Read(0);
+		sv0 = (float)ADC0Read(3);
+		sv1 = (float)ADC1Read(4);
 
-		float error = 30;
-		error += sv0;
-		error += sv1;
-		error += sv2;
+		CLKPR=0b10000000; // set timer for serial output
+		CLKPR=0b00000000; // set timer for serial output
+
+		char Buffer[8];
+		USART_putstring("DMS: ");
 		
-		error -= offset;
-		if (sv2 > sv0) { // 偏左
-			if (error > 0) error *= -1; 
-		}
-		else { // 偏右
-			if (error < 0) error *= -1; 
-		}
-		
-		PIDcontrol( &error, &Kp, &Ki, &Kd, &Tp, &integral, &lastError, &derivative);
+		char *intStr = itoa((float) sv0, Buffer, 10);
+		strcat(intStr, ", IR: ");
+		USART_putstring(intStr);
 
-		// float turn = Kp*error;
+		intStr = itoa((float) sv1, Buffer, 10);
+		strcat(intStr, "\n");
+		USART_putstring(intStr);
 
-
-		// char Buffer[8];
-		// char *intStr = itoa((float) error, Buffer, 10);
-		// strcat(intStr, "\n");
-		// USART_putstring(intStr);
-
-		// _delay_ms(500);
+		_delay_ms(500);
 	}
 
 	return 0;
 }
 
 uint16_t ADC0Read(const int channel) {
-	ADMUX = 0b01000000;
+	ADMUX = 0b01000011;
 	ADMUX |= channel;
 	ADCSRA |= (1<<ADSC) | (1<<ADIF);
 	while ( (ADCSRA & (1<<ADIF)) == 0);
@@ -108,16 +70,7 @@ uint16_t ADC0Read(const int channel) {
 }
 
 uint16_t ADC1Read(const int channel) {
-	ADMUX = 0b01000001;
-	ADMUX |= channel;
-	ADCSRA |= (1<<ADSC) | (1<<ADIF);
-	while ( (ADCSRA & (1<<ADIF)) == 0);
-	ADCSRA &= ~(1<<ADSC);
-	return ADC;
-}
-
-uint16_t ADC2Read(const int channel) {
-	ADMUX = 0b010000010;
+	ADMUX = 0b0100100;
 	ADMUX |= channel;
 	ADCSRA |= (1<<ADSC) | (1<<ADIF);
 	while ( (ADCSRA & (1<<ADIF)) == 0);
