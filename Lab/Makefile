@@ -1,6 +1,10 @@
 #Main application file name
-MAIN_APP = Lab
+
+#MAIN_APP = Lab
+# MAIN_APP = lineFollower
+MAIN_APP = yylun
 FOLDER_NAME = Lab
+
 #Main hex file path in windows format
 MAIN_HEX_PATH = /Users/ben/Desktop/AVR-code-Microcontrollers-Mechatronics/$(FOLDER_NAME)/$(MAIN_APP).hex
 
@@ -25,7 +29,7 @@ DUDEFLAGS += avrisp
 DUDEFLAGS += -p
 DUDEFLAGS += m328p  
 DUDEFLAGS += -P 
-DUDEFLAGS += /dev/cu.usbmodem142101
+DUDEFLAGS += /dev/cu.usbmodem14201
 DUDEFLAGS += -b 
 DUDEFLAGS += 19200 
 DUDEFLAGS += -U flash:w:$(MAIN_HEX_PATH):i
