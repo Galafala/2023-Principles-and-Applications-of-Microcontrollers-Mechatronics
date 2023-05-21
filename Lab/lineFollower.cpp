@@ -20,41 +20,23 @@ void serialOutput();
 
 void USART_putstring(char* StringPtr);
 
-void PIDcontrol(float* error, float* Kp, float* Ki, float* Kd, const float* Tp, float* integral, float* lastError, float* derivative) {
-	*integral += *error;
-	*derivative = *error-*lastError;
-	
-	float turn = *Kp**error + *Ki**integral + *Kd**derivative; // revice turn
-
-    float right = *Tp+turn;
-    float left = *Tp-turn;
-
-    if (right>255) right = 255;
-	if (right<0) right = 0;
-
-    if (left>255) left = 255;
-    if (left<0) left = 0;
-
-	OCR2B = right; // PD3 lN4 MOTOR2正轉 (right)
-	OCR0B = left; // PD5 lN2 MOTOR1正轉 (left)
-	
-	*lastError = *error;
-}
+void PIDcontrol(float* error, float* Kp, float* Ki, float* Kd, const float* Tp, float* integral, float* lastError, float* derivative);
 
 int main(void) {
 	motorInit();
 	
 	// serialOutput();
 
-	float Kp = 340;
-	float Ki = 0;
-	float Kd = 80;
+	// float Kp = 220;
+	// float Ki = 0.35;
+	// float Kd = 10;
 
-	// float Kp = 380;
-	// float Ki = 0;
-	// float Kd = 350;
+	float Kp = 225;
+	float Ki = 0.15;
+	float Kd = 0;
 
-	const float Tp = 255;
+
+	const float Tp = 200;
 	const float offset = 800;
 
 	float integral = 0;
@@ -80,7 +62,6 @@ int main(void) {
 		error += sv1;
 		error += sv2;
 		
-		// error -= offset;
         error = offset/error;
         
 		// if (sv1>100) {   // 偏左
@@ -89,8 +70,11 @@ int main(void) {
 		// else if (sv0>200) {
 		// 	error *= 1.2; // 偏右 左輪減速
 		// }
-		if (sv1>100) {   // 偏左
-            error *= -1;
+		if (sv1>100 && sv0>200 && sv2>200) {
+			error = lastError;
+		}		
+		else if (sv1>100) {   // 偏左
+            error *= -1.2;
 		}
         else if (sv0>200) {
 			error *= 1.2; // 偏右 左輪減速
@@ -178,4 +162,25 @@ void USART_putstring(char* StringPtr) {
 		UDR0 = *StringPtr;
 		StringPtr++;
 	}
+}
+
+void PIDcontrol(float* error, float* Kp, float* Ki, float* Kd, const float* Tp, float* integral, float* lastError, float* derivative) {
+	*integral += *error;
+	*derivative = *error-*lastError;
+	
+	float turn = *Kp**error + *Ki**integral + *Kd**derivative; // revice turn
+
+    float right = *Tp+turn;
+    float left = *Tp-turn;
+
+    if (right>255) right = 255;
+	if (right<0) right = 0;
+
+    if (left>255) left = 255;
+    if (left<0) left = 0;
+
+	OCR2B = right; // PD3 lN4 MOTOR2正轉 (right)
+	OCR0B = left; // PD5 lN2 MOTOR1正轉 (left)
+	
+	*lastError = *error;
 }
