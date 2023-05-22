@@ -1,7 +1,7 @@
 #Main application file name
 MAIN_APP = Lab
 #Main hex file path in windows format
-MAIN_HEX_PATH = /Users/weber/Documents/GitHub/AVR-code-Microcontrollers-Mechatronics/Lab/$(MAIN_APP).hex
+MAIN_HEX_PATH = /Users/weber/Documents/GitHub/AVR-code-Microcontrollers-Mechatronics/final/$(MAIN_APP).hex
 
 # Compiler and other Section
 CC = /usr/local/bin/avr-gcc

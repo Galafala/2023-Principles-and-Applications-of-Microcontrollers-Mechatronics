@@ -18,28 +18,28 @@ void stop() {
 }
 
 void turnright() {	
-	OCR0A=0; // PD6 lN1 MOTOR1反轉right
-	OCR0B=210; // PD5 lN2 MOTOR1正轉###
-	OCR2A=0;//PB3 lN3 MOTOR2反轉left
-	OCR2B=50;//PD3 lN4 MOTOR2正轉
+	OCR0A=0; // PD6 lN1 MOTOR1反轉
+	OCR0B=255; // PD5 lN2 MOTOR1正轉(左輪)
+	OCR2A=0;//PB3 lN3 MOTOR2反轉
+	OCR2B=165;//PD3 lN4 MOTOR2正轉 130
 }
 
 void turnleft() {
-	OCR0A=0; // PD6 lN1 MOTOR1反轉right
-	OCR0B=50; // PD5 lN2 MOTOR1正轉
-	OCR2A=0;//PB3 lN3 MOTOR2反轉left
-	OCR2B=210;//PD3 lN4 MOTOR2正轉####
+	OCR0A=130; // PD6 lN1 MOTOR1反轉
+	OCR0B=0; // PD5 lN2 MOTOR1正轉
+	OCR2A=0;//PB3 lN3 MOTOR2反轉
+	OCR2B=130;//PD3 lN4 MOTOR2正轉 (右輪)
 }
 
 void straight() {
 	OCR0A=0; // PD6 lN1 MOTOR1反轉right
-	OCR0B=225; // PD5 lN2 MOTOR1正轉 (右輪)
+	OCR0B=100; // PD5 lN2 MOTOR1正轉 
 	OCR2A=0;//PB3 lN3 MOTOR2反轉left
-	OCR2B=225;//PD3 lN4 MOTOR2正轉 (左輪)
+	OCR2B=100;//PD3 lN4 MOTOR2正轉 
 }
 
 uint16_t ADC0Read(const int channel) {
-	ADMUX = 0b01000000;
+	ADMUX = 0b01000011;
 	ADMUX |= channel;
 	ADCSRA |= (1<<ADSC) | (1<<ADIF);
 	while ( (ADCSRA & (1<<ADIF)) == 0);
@@ -48,16 +48,7 @@ uint16_t ADC0Read(const int channel) {
 }
 
 uint16_t ADC1Read(const int channel) {
-	ADMUX = 0b01000001;
-	ADMUX |= channel;
-	ADCSRA |= (1<<ADSC) | (1<<ADIF);
-	while ( (ADCSRA & (1<<ADIF)) == 0);
-	ADCSRA &= ~(1<<ADSC);
-	return ADC;
-}
-
-uint16_t ADC2Read(const int channel) {
-	ADMUX = 0b010000010;
+	ADMUX = 0b01000100;
 	ADMUX |= channel;
 	ADCSRA |= (1<<ADSC) | (1<<ADIF);
 	while ( (ADCSRA & (1<<ADIF)) == 0);
@@ -115,36 +106,25 @@ int main(void) {
 		ADCSRA |= (1<<ADEN);
 		float sv1 = 0;
 		float sv2 = 0;
-		float sv3 = 0;
-		for(int i = 0; i < 10; i++)	{
-			sv1 += (float)ADC0Read(0);
-			sv2 += (float)ADC1Read(1);
-			sv3 += (float)ADC2Read(2);
-		} // read data from sensors
-		
-		sv1 /= 10; // mean of 10 readings
-		sv2 /= 10;
-		sv3 /= 10;
-		// sv1 left sensor
-		// sv2 middle sensor
-		// sv3 right sensor
-		// turnleft();
-		// if (sv1>sv2){
-		// 	turnleft();
-		// }
-		if(sv2>500) {
-			straight();
-			// _delay_ms(20);
+		// for(int i = 0; i < 10; i++)	{
+			sv1 += (float)ADC0Read(3);
+			sv2 += (float)ADC1Read(4);
+		// } // read data from sensors
+	// if (sv2<100) straight();
+	// else stop();
+		if(sv2 < 500){
+			
+		turnleft();
 		}
-		else if (sv3>500) {
+		else if (sv1 > 650 )
+		{
+		// straight();
+		turnleft();
+		}
+		else {
+			// stop();
 			turnright();
-			// _delay_ms(5);
-			}
-		else if (sv1>500){
-			turnleft();
-			// _delay_ms(5);
-		}
 	}
-
+	}
 	return 0;
 }

@@ -11,13 +11,13 @@
 // Write your main code
 int main(void)
 {
-    DDRD = 0b10000000;
+    DDRD = 0b11111111;
     while (1)
     {
-        PORTD = 0b10000000;
-        _delay_ms(1000);
+        PORTD = 0b00000001;
+        _delay_ms(500);
         PORTD = 0b00000000;
-        _delay_ms(1000);
+        _delay_ms(500);
     }
     return 0;
 }

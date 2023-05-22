@@ -24,7 +24,7 @@ DUDEFLAGS += avrisp
 DUDEFLAGS += -p
 DUDEFLAGS += m328p  
 DUDEFLAGS += -P 
-DUDEFLAGS += /dev/cu.usbmodem143101
+DUDEFLAGS += /dev/cu.usbmodem144301
 DUDEFLAGS += -b 
 DUDEFLAGS += 19200 
 DUDEFLAGS += -U flash:w:$(MAIN_HEX_PATH):i
@@ -42,10 +42,10 @@ Burn : Build
 	$(AVRDUDE) $(DUDEFLAGS)
 
 Build : $(MAIN_APP).elf
-	$(OBJCOPY) $(HFLAGS) $< $(MAIN_APP).hex
+# 	$(OBJCOPY) $(HFLAGS) $< $(MAIN_APP).hex
 	
-$(MAIN_APP).elf: $(MAIN_APP).o
-	$(CC) $(SRC) $(INCLUDE) $(LFLAGS) $@
+# $(MAIN_APP).elf: $(MAIN_APP).o
+# 	$(CC) $(SRC) $(INCLUDE) $(LFLAGS) $@
 	
-$(MAIN_APP).o:$(SRC)
-	$(CC) $^ $(INCLUDE) $(CFLAGS) $@
+# $(MAIN_APP).o:$(SRC)
+# 	$(CC) $^ $(INCLUDE) $(CFLAGS) $@
