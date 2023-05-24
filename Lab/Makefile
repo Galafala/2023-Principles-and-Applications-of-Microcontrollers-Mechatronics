@@ -1,6 +1,6 @@
 #Main application file name
 
-#MAIN_APP = Lab
+# MAIN_APP = Lab
 MAIN_APP = lineFollower
 # MAIN_APP = yylun
 FOLDER_NAME = Lab

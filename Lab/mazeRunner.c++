@@ -24,94 +24,49 @@ void PIDcontrol(float* error, float* Kp, float* Ki, float* Kd, const float* Tp, 
 
 int main(void) {
 	motorInit();
-	
-	// serialOutput();
 
-	// float Kp = 245.5;
-	// float Ki = 0.05;
-	// float Kd = 50;
-	// const float Tp = 255;
+	// float Kp = 220;
+	// float Ki = 0.35;
+	// float Kd = 10;
 
-	// float Kp = 235;
-	// float Ki = 0;
-	// float Kd = 0;
-	// const float Tp = 220;
-
-	// float Kp = 240.97321;
-	// float Ki = 0;
-	// float Kd = 0;
-	// const float Tp = 255;
-
-	float Kp = 230;
-	float Ki = 0;
+	float Kp = 225;
+	float Ki = 0.15;
 	float Kd = 0;
-	const float Tp = 200;
 
-	const float offset = 800;
+	const float Tp = 255;
 
 	float integral = 0;
 	float lastError = 0;
 	float derivative = 0;
 
 	while(1) {
-        // CLKPR=0b10000000; // set timer for serial output
-        // CLKPR=0b00000000; // set timer for serial output
        
 		ADCSRA |= (1<<ADEN);
 
 		float sv0 = 0;
 		float sv1 = 0;
-		float sv2 = 0;
 
-		sv0 = (float)ADC0Read(0); // left sen
-		sv1 = (float)ADC1Read(1); // right
-		sv2 = (float)ADC2Read(2); // mid
+		sv0 = (float)ADC0Read(3); // DMS
+		sv1 = (float)ADC1Read(4); // IR
 
 		float error = 0;
 		error += sv0;
 		error += sv1;
-		error += sv2;
 		
-        error = offset/error;
+        error = 1/error;
         
-		if (sv1>100 && sv0>200 && sv2>400) {
-			error = 0;
-		}		
-		else if (sv1>100) {   // 偏左
-            error *= -1.1;
+		if (sv0>500) {
+			error *= -1;
 		}
-        else if (sv0>200) {
-			error *= 1.2; // 偏右 左輪減速
-		}
-		else error = 0 ; // straight
 			
 		PIDcontrol(&error, &Kp, &Ki, &Kd, &Tp, &integral, &lastError, &derivative);
-
-		/*char Buffer[50];
-        char *intStr = itoa((float) sv0, Buffer, 10);
-        strcat(intStr, ", ");
-        USART_putstring(intStr);
-
-        intStr = itoa((float) sv1, Buffer, 10);
-        strcat(intStr, ", ");
-        USART_putstring(intStr);
-
-        intStr = itoa((float) sv2, Buffer, 10);
-        strcat(intStr, ", ");
-        USART_putstring(intStr);
-
-        intStr = itoa((float) error, Buffer, 10);
-        strcat(intStr, "\n");
-        USART_putstring(intStr);
-
-        _delay_ms(500);*/
 	}
 
 	return 0;
 }
 
 uint16_t ADC0Read(const int channel) {
-	ADMUX = 0b01000000;
+	ADMUX = 0b01000011;
 	ADMUX |= channel;
 	ADCSRA |= (1<<ADSC) | (1<<ADIF);
 	while ( (ADCSRA & (1<<ADIF)) == 0);
@@ -120,16 +75,7 @@ uint16_t ADC0Read(const int channel) {
 }
 
 uint16_t ADC1Read(const int channel) {
-	ADMUX = 0b01000001;
-	ADMUX |= channel;
-	ADCSRA |= (1<<ADSC) | (1<<ADIF);
-	while ( (ADCSRA & (1<<ADIF)) == 0);
-	ADCSRA &= ~(1<<ADSC);
-	return ADC;
-}
-
-uint16_t ADC2Read(const int channel) {
-	ADMUX = 0b010000010;
+	ADMUX = 0b01000100;
 	ADMUX |= channel;
 	ADCSRA |= (1<<ADSC) | (1<<ADIF);
 	while ( (ADCSRA & (1<<ADIF)) == 0);
@@ -143,28 +89,11 @@ void motorInit() {
 	DDRD=0xFF; // PORTD as output
 	DDRB=0xFF; // PORTB as output
 	
-    DDRC=0;
+    DDRC = 0;
 	TCCR0A=0b10100001; // phase correct PWM
 	TCCR0B=0b00000010; // timer prescaler
 	TCCR2A=0b10100001; // phase correct PWM
 	TCCR2B=0b00000010; // timer prescaler
-}
-
-void serialOutput() {
-	unsigned int BaudR = 9600;
-	unsigned int ubrr = (F_CPU / (BaudR*16UL))-1;
-	UBRR0H = (unsigned char)(ubrr>>8);
-	UBRR0L = (unsigned char)ubrr;
-	UCSR0C |= (1<<UCSZ01)|(1<<UCSZ00);
-	UCSR0B |= (1<<TXEN0);
-}
-
-void USART_putstring(char* StringPtr) {
-	while(*StringPtr != 0x00){
-		while(!(UCSR0A & (1<<UDRE0)));
-		UDR0 = *StringPtr;
-		StringPtr++;
-	}
 }
 
 void PIDcontrol(float* error, float* Kp, float* Ki, float* Kd, const float* Tp, float* integral, float* lastError, float* derivative) {
